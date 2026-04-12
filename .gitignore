@@ -1,0 +1,40 @@
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# AgentCore
+.bedrock_agentcore.yaml
+.bedrock_agentcore/
+
+# CDK
+cdk.out/
+cdk.out.tmp/
+.cdk.staging/
+node_modules/
+*.js
+*.d.ts
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary / Working files
+tmp/
+
+# Claude Code
+.claude/
+CLAUDE.md
