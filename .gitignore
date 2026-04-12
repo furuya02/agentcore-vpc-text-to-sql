@@ -35,6 +35,7 @@ Thumbs.db
 # Temporary / Working files
 tmp/
 
+Blog/
 # Claude Code
 .claude/
 CLAUDE.md
