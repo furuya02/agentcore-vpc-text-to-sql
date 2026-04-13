@@ -101,34 +101,41 @@ chmod +x scripts/seed-data.sh
 
 ```bash
 cd agent
-agentcore create -p texttosql -t basic --agent-framework Strands --model-provider Bedrock --non-interactive --no-venv
+agentcore create \
+  --name texttosql \
+  --framework Strands \
+  --model-provider Bedrock \
+  --memory none \
+  --network-mode VPC \
+  --subnets "（SubnetIds の値1）,（SubnetIds の値2）" \
+  --security-groups "（AgentCoreSecurityGroupId の値）" \
+  --skip-python-setup
 ```
 
-> **注意**: プロジェクト名にハイフン (`-`) やアンダースコア (`_`) は使えません。英数字のみ、36文字以内です。
-
-生成された `.bedrock_agentcore.yaml` を編集し、VPC 設定を追加します:
-
-```yaml
-# network_configuration セクションを以下に変更
-network_configuration:
-  network_mode: VPC
-  network_mode_config:
-    subnets:
-      - （SubnetIds の値1）
-      - （SubnetIds の値2）
-    security_groups:
-      - （AgentCoreSecurityGroupId の値）
-```
-
-> **注意**: `agentcore create` で PUBLIC モードで作成した後に `agentcore configure --vpc` で変更しようとするとエラーになります。yaml を直接編集してください。
+> **注意**: プロジェクト名にハイフン (`-`) やアンダースコア (`_`) は使えません。英数字のみ、23文字以内です。
 
 ### Step 4. AgentCore デプロイ
 
+`agent/texttosql/agentcore/agentcore.json` の runtime の `envVars` に環境変数を追加します:
+
+```json
+"envVars": [
+  {
+    "name": "DB_SECRET_ARN",
+    "value": "（SecretArn の値）"
+  },
+  {
+    "name": "DB_NAME",
+    "value": "ecommerce"
+  }
+]
+```
+
+その後デプロイします:
+
 ```bash
-cd agent
-agentcore deploy \
-  --env "DB_SECRET_ARN=（SecretArn の値）" \
-  --env "DB_NAME=ecommerce"
+cd agent/texttosql
+agentcore deploy
 ```
 
 ### Step 5. 実行ロールに Secrets Manager の権限を追加

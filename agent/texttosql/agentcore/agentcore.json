@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "texttosql",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "texttosql"
+  },
+  "runtimes": [
+    {
+      "name": "texttosql",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/texttosql/",
+      "runtimeVersion": "PYTHON_3_13",
+      "networkMode": "VPC",
+      "networkConfig": {
+        "subnets": [
+          "subnet-059414501ee87baa2",
+          "subnet-0d95b29308468e6c7"
+        ],
+        "securityGroups": [
+          "sg-0dfaf32456547f9df"
+        ]
+      },
+      "protocol": "HTTP",
+      "envVars": [
+        {
+          "name": "DB_SECRET_ARN",
+          "value": "arn:aws:secretsmanager:ap-northeast-1:439028474478:secret:AuroraClusterSecret8E4F2BC8-K1aRuwSp9ZU9-SO4m0R"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "ecommerce"
+        }
+      ]
+    }
+  ],
+  "memories": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": []
+}

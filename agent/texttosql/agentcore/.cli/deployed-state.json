@@ -1,0 +1,16 @@
+{
+  "targets": {
+    "default": {
+      "resources": {
+        "runtimes": {
+          "texttosql": {
+            "runtimeId": "texttosql_texttosql-m1BnYvBet3",
+            "runtimeArn": "arn:aws:bedrock-agentcore:ap-northeast-1:439028474478:runtime/texttosql_texttosql-m1BnYvBet3",
+            "roleArn": "arn:aws:iam::439028474478:role/AgentCore-texttosql-defau-ApplicationAgentTexttosql-zTG6I5ZLdx5k"
+          }
+        },
+        "stackName": "AgentCore-texttosql-default"
+      }
+    }
+  }
+}
