@@ -369,7 +369,7 @@ agentcore destroy
   → ⚠ ENI が残っている間は SG を削除できない
 ```
 
-> **重要:** AgentCore の ENI 解放には時間がかかるため、`cleanup.sh` では ENI の解放を最大 10 分待機してから CDK スタックの削除に進みます。ENI が残っている場合、SG をスキップして CDK を削除し、後で SG を手動削除する戦略を取っています。
+> **重要:** AgentCore の ENI 解放には時間がかかるため、`agentcore destroy` 後は ENI が解放されるまで待ってから `cdk destroy` を実行してください。ENI が残っている間は SG を削除できず、CDK スタックの削除が失敗します。
 
 ---
 
@@ -489,18 +489,13 @@ if not sql.strip().upper().startswith("SELECT"):
 
 ### 6.3 クリーンアップ
 
-検証後は必ず `scripts/cleanup.sh` を実行してください。
+検証後は以下の順でリソースを削除してください。
 
 ```bash
-./scripts/cleanup.sh
+agentcore destroy        # エージェントを削除
+# ENI が解放されるまで待機（数分〜数時間）
+cd cdk && npx cdk destroy  # CDK スタックを削除
 ```
-
-クリーンアップの流れ:
-
-1. `agentcore destroy` でエージェントを削除
-2. ENI の解放を最大 10 分待機
-3. `cdk destroy` で CDK スタック（VPC、Aurora 等）を削除
-4. 残った SG の削除を試行
 
 > ENI 解放が間に合わない場合は、CloudFormation の強制削除も可能です:
 > ```bash
