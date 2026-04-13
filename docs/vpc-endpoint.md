@@ -59,12 +59,12 @@ NAT Gateway を使わない理由:
 
 ### 1. Bedrock Runtime Endpoint
 
-**目的**: AgentCore 上の Strands Agent が Amazon Bedrock（Claude Sonnet 4）を呼び出す際に使用。
+**目的**: AgentCore 上のエージェントが boto3 Converse API 経由で Amazon Bedrock（Claude Sonnet 4）を呼び出す際に使用。
 
 ```
 AgentCore Runtime
     │
-    │ InvokeModel API (HTTPS/443)
+    │ Converse API (HTTPS/443)
     │ PrivateLink 経由
     ▼
 Bedrock Runtime Endpoint (ENI)
@@ -73,7 +73,7 @@ Bedrock Runtime Endpoint (ENI)
 Amazon Bedrock Service
 ```
 
-- Text-to-SQL の中核。自然言語 → SQL 変換、結果の要約など、すべての LLM 呼び出しがこのエンドポイントを通過する
+- Text-to-SQL の中核。boto3 Converse API による自然言語 → SQL 変換、結果の要約など、すべての LLM 呼び出しがこのエンドポイントを通過する
 - Inference Profile ID: `apac.anthropic.claude-sonnet-4-20250514-v1:0`
 
 ### 2. CloudWatch Logs Endpoint
