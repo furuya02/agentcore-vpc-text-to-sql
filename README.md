@@ -4,50 +4,7 @@ A Text-to-SQL agent that runs AgentCore inside a VPC and queries Aurora Serverle
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ VPC (10.0.0.0/16)                                               │
-│                                                                 │
-│  ┌──────────────────────┐    ┌──────────────────────┐           │
-│  │ Private Subnet 1     │    │ Private Subnet 2     │           │
-│  │ (ap-northeast-1a)    │    │ (ap-northeast-1c)    │           │
-│  │                      │    │                      │           │
-│  │  AgentCore Runtime   │    │                      │           │
-│  │  ┌────────────────┐  │    │                      │           │
-│  │  │ Text-to-SQL    │  │    │                      │           │
-│  │  │ Agent          │  │    │                      │           │
-│  │  │ (Strands +     │  │    │                      │           │
-│  │  │  Bedrock)      │  │    │                      │           │
-│  │  └───┬────────┬───┘  │    │                      │           │
-│  │      │        │      │    │                      │           │
-│  │      │   ┌────┼──────┼────┼──────────────────┐   │           │
-│  │      │   │    │   Aurora Serverless v2        │   │           │
-│  │      │   │    │   (PostgreSQL 16.4)           │   │           │
-│  │      │   │    └──►  E-commerce order data     │   │           │
-│  │      │   │        - customers (50 rows)       │   │           │
-│  │      │   │        - products (30 rows)        │   │           │
-│  │      │   │        - orders (200 rows)         │   │           │
-│  │      │   │        - order_items (500 rows)    │   │           │
-│  │      │   └────────────────────────────────────┘   │           │
-│  └──────┼───────────────┘    └───────────────────────┘           │
-│         │                                                       │
-│  ┌──────┼───────────────────────────────────────────────────┐   │
-│  │ VPC Endpoints (Interface type)                            │   │
-│  │  ├── bedrock-runtime ──► Amazon Bedrock (Claude Sonnet 4) │   │
-│  │  ├── logs ─────────────► CloudWatch Logs                  │   │
-│  │  └── secretsmanager ──► Secrets Manager (DB credentials)  │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  Security Groups:                                               │
-│  - AgentCore SG: outbound all                                   │
-│  - Aurora SG: inbound 5432 from AgentCore SG only               │
-└─────────────────────────────────────────────────────────────────┘
-
-                    ▲
-                    │ agentcore invoke '{"prompt": "Top 10 sales?"}'
-                    │
-                  User
-```
+![](docs/001.png)
 
 ## Prerequisites
 
