@@ -10,13 +10,18 @@ AgentCore にデプロイした Text-to-SQL エージェントの動作確認方
 agentcore invoke '{"prompt": "（自然言語の質問）"}'
 ```
 
-エージェントは以下の流れで処理します:
+エージェントは boto3 `converse` API を直接呼び出し、以下の流れで処理します:
 
-1. Bedrock（Claude Sonnet 4）が質問を解析
-2. `list_tables` ツールでテーブル構造を取得
-3. SQL を生成
-4. `execute_query` ツールで Aurora に SQL を実行
-5. 結果を日本語で整形して返却
+1. boto3 `converse` API で Bedrock（Claude Sonnet 4）にプロンプトを送信
+2. Claude が `tool_use` で `list_tables` を要求 → ツール実行 → `tool_result` を `converse` で返送
+3. Claude が SQL を生成し `tool_use` で `execute_query` を要求 → ツール実行 → `tool_result` を `converse` で返送
+4. Claude が最終応答テキストを返却（`stop_reason: end_turn`）
+
+レスポンスはノンストリーミングで、最終テキストが一括で返されます。
+
+> **Note**: Strands SDK は AgentCore v0.8 VPC モード環境で 2 回目の Bedrock API 呼び出し時にハングする問題があるため、boto3 `converse` API を直接使用しています。詳細は [Blog/strands-vpc-hang-issue.md](../Blog/strands-vpc-hang-issue.md) を参照してください。
+
+エントリポイント: `agent/texttosql/app/texttosql/main.py`
 
 ## テスト 1: テーブル一覧の取得
 
@@ -110,7 +115,7 @@ agentcore invoke '{"prompt": "売上トップ5の商品は？"}'
 
 ## エージェントの内部動作
 
-`agentcore invoke` 実行時、エージェント内部では以下の通信が発生しています:
+`agentcore invoke` 実行時、エージェント内部では boto3 `converse` API によるツールループが動作します:
 
 ```
 User
@@ -120,9 +125,10 @@ User
   ▼
 AgentCore Runtime (VPC Private Subnet)
   │
+  │  [Turn 1] boto3 converse() 呼び出し
   ├──► VPC Endpoint (bedrock-runtime)
-  │      → Bedrock Claude Sonnet 4 に推論リクエスト
-  │      → 「list_tables を呼んでテーブル構造を確認しよう」
+  │      → converse API: プロンプト送信
+  │      ← stop_reason: tool_use (list_tables)
   │
   ├──► VPC Endpoint (secretsmanager)
   │      → Secrets Manager から DB 認証情報を取得
@@ -130,24 +136,29 @@ AgentCore Runtime (VPC Private Subnet)
   ├──► Aurora Serverless v2 (VPC 内直接通信)
   │      → list_tables: information_schema.columns を SELECT
   │
+  │  [Turn 2] boto3 converse() 呼び出し (tool_result を送信)
   ├──► VPC Endpoint (bedrock-runtime)
-  │      → 「テーブル構造をもとに SQL を生成しよう」
-  │      → SELECT p.name, SUM(oi.quantity * oi.unit_price) ...
+  │      → converse API: list_tables の結果を送信
+  │      ← stop_reason: tool_use (execute_query)
+  │      → 生成 SQL: SELECT p.name, SUM(oi.quantity * oi.unit_price) ...
   │
   ├──► Aurora Serverless v2 (VPC 内直接通信)
   │      → execute_query: 生成した SQL を実行
   │
+  │  [Turn 3] boto3 converse() 呼び出し (tool_result を送信)
   ├──► VPC Endpoint (bedrock-runtime)
-  │      → 「結果を日本語で分かりやすく整形しよう」
+  │      → converse API: クエリ結果を送信
+  │      ← stop_reason: end_turn (最終応答テキスト)
   │
   ├──► VPC Endpoint (logs)
   │      → CloudWatch Logs にログ出力
   │
   ▼
-User ← レスポンス返却
+User ← レスポンス返却（ノンストリーミング）
 ```
 
-1 回の invoke で Bedrock API を **3 回**呼び出しています（ツール選択 → SQL 生成 → 結果整形）。
+1 回の invoke で boto3 `converse` API を **3 回**呼び出しています（ツール選択 → SQL 生成 → 結果整形）。
+各ターンでは `stop_reason` を確認し、`tool_use` なら該当ツールを実行して `tool_result` を次の `converse` 呼び出しに渡します。`end_turn` で最終テキストを取得して返却します。
 
 ## その他の問い合わせ例
 
