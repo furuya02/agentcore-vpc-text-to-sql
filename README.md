@@ -145,20 +145,15 @@ agentcore invoke '{"prompt": "How many customers are there per prefecture?"}'
 **Be sure to run this after verification.** Leaving resources running will incur VPC Endpoint charges (~$1/day).
 
 ```bash
-# Run from the project root
-./scripts/cleanup.sh
+cd agent/texttosql
+agentcore destroy
+
+# Wait for ENI release (may take several minutes to hours)
+
+cd cdk
+npx cdk destroy
 ```
 
 > **Note**: It may take several minutes to hours for ENIs created by AgentCore inside the VPC to be released.
-> `cleanup.sh` waits for ENI release before deleting the CDK stack, so it is safe to use.
+> While ENIs remain, Security Groups cannot be deleted, causing `cdk destroy` to fail.
 > If you cannot wait, force delete with: `aws cloudformation delete-stack --stack-name text-to-sql-stack --deletion-mode FORCE_DELETE_STACK --region ap-northeast-1`
-
-### Estimated Cost if Left Running
-
-| Resource | Monthly Cost |
-|:---------|:------------|
-| VPC Endpoint × 3 | ~$30 |
-| Aurora ACU | $0 (auto-paused when idle) |
-| Aurora Storage | ~$0.01 |
-| Secrets Manager | ~$0.40 |
-| VPC / Subnet / SG | $0 |

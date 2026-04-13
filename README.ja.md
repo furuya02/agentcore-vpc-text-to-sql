@@ -145,20 +145,15 @@ agentcore invoke '{"prompt": "都道府県別の顧客数を教えて"}'
 **検証後は必ず実行してください。** 放置すると VPC Endpoint の課金（~$1/日）が発生します。
 
 ```bash
-# プロジェクトルートから実行
-./scripts/cleanup.sh
+cd agent/texttosql
+agentcore destroy
+
+# ENI が解放されるまで待機（数分〜数時間）
+
+cd cdk
+npx cdk destroy
 ```
 
 > **注意**: AgentCore が VPC 内に作成した ENI の解放に数分〜数時間かかることがあります。
-> `cleanup.sh` は ENI 解放を待ってから CDK を削除するため、安全に実行できます。
+> ENI が残っている間は Security Group を削除できないため、`cdk destroy` が失敗します。
 > 待ちきれない場合は `aws cloudformation delete-stack --stack-name text-to-sql-stack --deletion-mode FORCE_DELETE_STACK --region ap-northeast-1` で強制削除できます。
-
-### 放置時のコスト目安
-
-| リソース | 月額 |
-|:---------|:-----|
-| VPC Endpoint × 3 | ~$30 |
-| Aurora ACU | $0（ゼロスケールで自動停止） |
-| Aurora ストレージ | ~$0.01 |
-| Secrets Manager | ~$0.40 |
-| VPC / Subnet / SG | $0 |
